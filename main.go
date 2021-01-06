@@ -51,7 +51,7 @@ func channelWrapper(fn func() error) <-chan error {
 }
 
 func installSignalHandlers() <-chan struct{} {
-	stopCh := make(chan struct{})
+	stopCh := make(chan struct{}) // could wrap the signal in an error, but it's not exceptional behaviour
 	signalCh := make(chan os.Signal, 2)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
