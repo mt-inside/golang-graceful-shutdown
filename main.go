@@ -24,7 +24,7 @@ func main() {
 	select {
 	case err = <-t1Ch:
 	case err = <-t2Ch:
-	case <-signalCh:
+	case <-signalCh: // It might seem at first glance that this is redundant, and that we can not wait for signalCh here but pass signalCh direct to the Tasks. Try it, you get stuck.
 	}
 
 	log.Println("main thread woken, due to error:", err)
