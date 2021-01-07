@@ -15,11 +15,11 @@ func Task1(stopCh <-chan struct{}) <-chan error {
 		Addr: ":8081",
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc("/task1/quit", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/quit", func(w http.ResponseWriter, r *http.Request) {
 		// cause run-time error in srv.ListenAndServe()
 		srv.Close()
 	})
-	mux.HandleFunc("/task1", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Task1")
 	})
 	srv.Handler = mux
