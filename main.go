@@ -20,6 +20,8 @@ func main() {
 	t1Ch := Task1(stopCh)
 	t2Ch := Task2(stopCh)
 
+	/* Wait in parallel - any one is sufficient to shutdown; they signal an error (or signal) */
+
 	var err error
 	select {
 	case err = <-t1Ch:
@@ -31,6 +33,8 @@ func main() {
 
 	shutdown = true
 	close(stopCh)
+
+	/* Wait in series - all are needed to quit; they signal that shutdown is complete */
 
 	log.Println("waiting for shutdown")
 	for _, ch := range []<-chan error{t1Ch, t2Ch} {
