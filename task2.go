@@ -11,21 +11,22 @@ import (
 func Task2(stopCh <-chan struct{}) <-chan error {
 	localCh := make(chan error)
 
+	srv := &http.Server{
+		Addr: ":8082",
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/task2/quit", func(w http.ResponseWriter, r *http.Request) {
+		// cause run-time error in srv.ListenAndServe()
+		srv.Close()
+	})
+	mux.HandleFunc("/task2", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Task2")
+	})
+	srv.Handler = mux
+
+	// Only this part of the function needs to be off the main thread for avoid deadlocks. There may be non-functional performance advantages to running the above setup in parallel, but _concurrency is not parallelism_
 	go func() {
 		defer close(localCh)
-
-		srv := &http.Server{
-			Addr: ":8082",
-		}
-		mux := http.NewServeMux()
-		mux.HandleFunc("/task2/quit", func(w http.ResponseWriter, r *http.Request) {
-			// cause run-time error in srv.ListenAndServe()
-			srv.Close()
-		})
-		mux.HandleFunc("/task2", func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, "Task2")
-		})
-		srv.Handler = mux
 		log.Println("Task2 listening...")
 		serverCh := channelWrapper(func() error { return srv.ListenAndServe() })
 
