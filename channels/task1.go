@@ -27,6 +27,7 @@ func Task1(stopCh <-chan struct{}) <-chan error {
 	// Only this part of the function needs to be off the main thread for avoid deadlocks. There may be non-functional performance advantages to running the above setup in parallel, but _concurrency is not parallelism_
 	go func() {
 		defer close(localCh)
+
 		log.Println("Task1 listening...")
 		serverCh := channelWrapper(func() error { return srv.ListenAndServe() })
 

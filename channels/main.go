@@ -29,7 +29,7 @@ func main() {
 	case <-signalCh: // It might seem at first glance that this is redundant, and that we can not wait for signalCh here but pass signalCh direct to the Tasks. Try it, you get stuck.
 	}
 
-	log.Println("main thread woken, due to error:", err)
+	log.Println("main thread woken, due to:", err)
 
 	shutdown = true
 	close(stopCh)
@@ -54,14 +54,16 @@ func channelWrapper(fn func() error) <-chan error {
 	return ch
 }
 
-func installSignalHandlers() <-chan struct{} {
+func installSignalHandlers() <-chan struct{} { // tempting to type this as an error, but it isn't - it's non-failure, non-exceptional behavour to get a SIGTERM from k8s
 	stopCh := make(chan struct{}) // could wrap the signal in an error, but it's not exceptional behaviour
 	signalCh := make(chan os.Signal, 2)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-signalCh
+		sig := <-signalCh
 		close(stopCh)
-		<-signalCh
+		log.Printf("Got signal: %v", sig)
+		sig = <-signalCh
+		log.Printf("Got signal: %v", sig)
 		log.Println("You really mean it huh")
 		os.Exit(1)
 	}()
