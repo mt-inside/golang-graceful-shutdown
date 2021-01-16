@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -46,11 +48,41 @@ func main() {
 
 func channelWrapper(fn func() error) <-chan error {
 	ch := make(chan error)
+
 	go func() {
 		defer close(ch)
 		ch <- fn()
 	}()
 	return ch
+}
+
+func recoverWrapper(errCh chan<- error, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			// recover() must be called directly from the unwinding stack frame
+			if err := recoverToError(recover()); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				errCh <- err
+			}
+		}()
+		h.ServeHTTP(w, r)
+	}
+}
+
+func recoverToError(r interface{}) error {
+	var err error
+	if r != nil {
+		switch t := r.(type) {
+		case string:
+			err = errors.New(t)
+		case error:
+			err = t
+		default:
+			err = errors.New("Unknown error")
+		}
+		log.Println("Recovering:", err)
+	}
+	return err
 }
 
 func installSignalHandlers() <-chan struct{} {
