@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package hello;
+
+option go_package = "github.com/mt-inside/golang-graceful-shutdown/grpc/pb/hello";
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetReply {
+  string greeting = 1;
+}
+
+service Greeter {
+  rpc Greet (GreetRequest) returns (GreetReply) {}
+  rpc PenFriend (stream GreetRequest) returns (stream GreetReply) {}
+  rpc ValidateMe (stream GreetRequest) returns (stream GreetReply) {}
+}
